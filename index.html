@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>scratch card</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #underImage {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Dostosowanie obrazka */
+            opacity: 0; /* Ukryj obrazek na początku */
+            transition: opacity 0.3s ease; /* Dodany efekt przejścia */
+        }
+        #scratchCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <img id="underImage" src="3.jpg" alt="Zdjęcie pod spodem">
+        <canvas id="scratchCanvas"></canvas>
+    </div>
+    <script>
+        const canvas = document.getElementById('scratchCanvas');
+        const ctx = canvas.getContext('2d');
+        const underImage = document.getElementById('underImage');
+        const topImageSrc = '4.jpg';
+        let isDrawing = false;
+
+        function resizeCanvas() {
+            canvas.width = document.getElementById('container').clientWidth;
+            canvas.height = document.getElementById('container').clientHeight;
+            drawTopImage(); // Rysuj obrazek na wierzchu po zmianie rozmiaru
+        }
+
+        function drawTopImage() {
+            const img = new Image();
+            img.src = topImageSrc;
+            img.onload = function() {
+                let scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+                let x = (canvas.width - img.width * scale) / 2;
+                let y = (canvas.height - img.height * scale) / 2;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+                ctx.globalCompositeOperation = 'destination-out';
+                underImage.style.opacity = '1'; // Pokaż obrazek spod spodu po załadowaniu obrazka na wierzchu
+            };
+        }
+
+        function init() {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            canvas.addEventListener('mousedown', handleStart);
+            canvas.addEventListener('mousemove', handleMove);
+            canvas.addEventListener('mouseup', handleEnd);
+            canvas.addEventListener('touchstart', handleStart);
+            canvas.addEventListener('touchmove', handleMove);
+            canvas.addEventListener('touchend', handleEnd);
+        }
+
+        function handleStart(evt) {
+            evt.preventDefault();
+            isDrawing = true;
+            draw(evt);
+        }
+
+        function handleMove(evt) {
+            evt.preventDefault();
+            if (isDrawing) {
+                draw(evt);
+            }
+        }
+
+        function handleEnd() {
+            isDrawing = false;
+        }
+
+        function draw(evt) {
+            let pos = getEventPosition(canvas, evt);
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, 20, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function getEventPosition(canvas, evt) {
+            let rect = canvas.getBoundingClientRect();
+            let clientX, clientY;
+
+            if (evt.type.startsWith('touch')) {
+                clientX = evt.touches[0].clientX;
+                clientY = evt.touches[0].clientY;
+            } else {
+                clientX = evt.clientX;
+                clientY = evt.clientY;
+            }
+
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
+
+
+
+
+
